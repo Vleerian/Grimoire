@@ -1,0 +1,24 @@
+			<div class="container">
+				<form action="/newPage" method="post">
+				<center>
+					<h1 style="padding-bottom:0px; margin-bottom:0px;">$TITLE</h1>
+					<em style="padding-top:0px; margin-top:0px;">$BOOK</em>
+				</center>
+				<div class="row">
+					<div class="col"></div>
+					<div class="col-md-auto content">
+						$CONTENT
+					</div>
+					<div class="col"></div>
+				</div>
+			</div>
+			<input type="hidden" name="Page" value="$TITLE">
+			<input type="hidden" name="Book" value="$BOOK">
+			<textarea hidden name="Content">$RAWCONTENT</textarea>
+			<footer class="footer">
+				<div class="container">
+					<input type="Submit" name="Edit" value="Edit" class="NewButton">
+				</div>
+			</footer>
+			</form>
+	</body>
