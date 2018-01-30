@@ -72,7 +72,7 @@ async def book(request, book, api="false"):
 	book = urllib.parse.unquote(book)
 	Data = GetBook(book)
 	if Data == None:
-		return response.html(loadTemplate("NoBook"), status=404)
+		return response.html(loadTemplate("NoPage"), status=404)
 	Pages = ""
 	for Page in Data:
 		Pages += '<a href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
@@ -93,7 +93,7 @@ async def book(request, book, api="false"):
 	book = urllib.parse.unquote(book)
 	Data = GetPotentialBook(book)
 	if Data == None:
-		return response.html(loadTemplate("NoBook"), status=404)
+		return response.html(loadTemplate("NoPage"), status=404)
 	Pages = ""
 	for Page in Data:
 		Pages += '<a class="glow" href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
@@ -113,7 +113,7 @@ async def book(request, book, api="false"):
 async def books(request):
 	Data = GetBooks()
 	if Data == None:
-		return response.html("criterror", status=404)
+		return response.text("There's a serious problem, Zodivikh. Be sure you look at that 'console' of yours and fix it.", status=404)
 	Books = ""
 	for Book in Data:
 		Books += '<a href="/'+Book[0]+'">'+Book[0]+"</a><br>"

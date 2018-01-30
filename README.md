@@ -41,3 +41,6 @@ It's basically saying "Heyo! You should give this place some love and attention.
 I'm going with the Copyright(c) Atagait Denral 2018 license. I wouldn't enforce any license I chose, and I have no
 idea how any one I chose would interact with Markdown's or Sanic's, so I'm just steering clear of that for now.
 If any of you legal types can advise, that'd be appreciated :D
+
+## What does 'Zodivikh' mean?
+It means mortal, and is generally used as a passive-aggressive way of saying you're better than someone else.
