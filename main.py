@@ -79,7 +79,7 @@ async def book(request, book, api="false"):
 	Template = loadTemplate("list")
 	resp = Template.replace("$TITLE", book).replace("$ITEMS", Pages)
 
-	Prompt = Prompts().CharacterPrompt(book)
+	Prompt = Prompts().CreatePrompt(book)
 	if not Prompt == None:
 		resp = resp.replace("$PROMPT", Prompt)
 	else:
@@ -100,7 +100,7 @@ async def book(request, book, api="false"):
 	Template = loadTemplate("list")
 	resp = Template.replace("$TITLE", '<span class="glow">'+book+'</span>').replace("$ITEMS", Pages)
 
-	Prompt = Prompts().CharacterPrompt(book)
+	Prompt = Prompts().CreatePrompt(book)
 	if not Prompt == None:
 		resp = resp.replace("$PROMPT", Prompt)
 	else:

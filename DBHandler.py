@@ -33,8 +33,11 @@ def FromID(id : int):
 
 
 #This function gets all the pages from a book
-def GetBook(Book):
-	Cursor.execute("SELECT PageID, PageName FROM Pages WHERE BookName = ?", (Book, ))
+def GetBook(Book, IDs = True):
+	if IDs:
+		Cursor.execute("SELECT PageID, PageName FROM Pages WHERE BookName = ?", (Book, ))
+	else:
+		Cursor.execute("SELECT PageName FROM Pages WHERE BookName = ?", (Book, ))
 	return Cursor.fetchall()
 
 
