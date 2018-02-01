@@ -1,6 +1,8 @@
 import markdown
 import re
 
+#Atabang serves no purpose but centering pages, spoiler tags, and
+#hiding tag markers.
 def ParseAtabang(Text):
     Patterns = [
         [r":![cC]([\w\W]+?)(?:\n|$|<\/)", r"<center>\1</center></"],
@@ -12,6 +14,7 @@ def ParseAtabang(Text):
         Result = re.sub(Pattern[0], Pattern[1], Result)
     return Result
 
+#This just applies markdown and Atabang
 def Markup(Text):
     Result = markdown.markdown(Text)
     Result = ParseAtabang(Result)

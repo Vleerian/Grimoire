@@ -8,10 +8,15 @@ from DBHandler import *
 from MarkupHandler import *
 from PromptHandler import *
 
-app = Sanic("sanic_jinja2_render")
+#Create the app and define static content
+app = Sanic()
 app.static('/Templates', './Templates')
 app.static('/Assets', './Assets')
 
+
+#Loadtemplate command. Yes, I should use a library, but this also
+#Allows me to change an HTML file, refresh, and see the changes.
+#I'll likely swap it out in the future, if I can find a good reason.
 def loadTemplate(Template):
 	header = open("Templates/header.html", "r").read()
 	index = open("Templates/"+Template+".html", "r").read()
@@ -19,6 +24,8 @@ def loadTemplate(Template):
 	return header + index + footer
 
 
+#Index page, we don't need to do much here other than give general
+#information. It also provides recent changes, because why not.
 @app.route("/")
 async def index(request):
 	resp = loadTemplate("index")
@@ -39,6 +46,7 @@ async def index(request):
 	return response.html(resp, status=200)
 
 
+#Newpage. Does little but serve a form to create new pages.
 @app.route("/newPage", methods=['GET', 'POST'])
 async def book(request):
 	resp = loadTemplate("newpage")
@@ -49,8 +57,10 @@ async def book(request):
 	return response.html(resp, status=200)
 
 
+#Submit, it's the heavy lifting part of newpage that Handles
+#actually committing pages to the database.
 @app.route("/submit", methods=['POST'])
-async def index(request):
+async def submit(request):
 	if "NEW" in request.form:
 		resp = HandleSubmit(request.form['Book'][0], request.form['Page'][0], request.form['Content'][0])
 		if resp == True:
@@ -67,6 +77,7 @@ async def index(request):
 		return redirect("/")
 
 
+#Book, this is the menu that lets you see all the pabes in a book.
 @app.route("/<book>")
 async def book(request, book, api="false"):
 	book = urllib.parse.unquote(book)
@@ -88,8 +99,9 @@ async def book(request, book, api="false"):
 	return response.html(resp, status=200)
 
 
+#Potential books are books that are linked elsewhere, but have no actual pages.
 @app.route("/potential/<book>")
-async def book(request, book, api="false"):
+async def potentialbook(request, book, api="false"):
 	book = urllib.parse.unquote(book)
 	Data = GetPotentialBook(book)
 	if Data == None:
@@ -109,6 +121,7 @@ async def book(request, book, api="false"):
 	return response.html(resp, status=200)
 
 
+#A list of all the books
 @app.route("/books")
 async def books(request):
 	Data = GetBooks()
@@ -129,6 +142,7 @@ async def books(request):
 	return response.html(resp, status=200)
 
 
+#A page
 @app.route("/<book>/<page>")
 async def page(request, book, page):
 	book = urllib.parse.unquote(book)
