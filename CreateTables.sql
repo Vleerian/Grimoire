@@ -53,7 +53,7 @@ END;
 
 CREATE TRIGGER PreventLinkingExitant
 AFTER INSERT ON Linked
-WHEN EXISTS (SELECT * FROM Pages WHERE New.Page = PageName AND NEW.Book = BookName)
+WHEN EXISTS (SELECT * FROM Pages WHERE NEW.Page = PageName AND NEW.Book = BookName)
 BEGIN
 DELETE FROM Linked WHERE PageName = NEW.Name AND BookName = NEW.Book;
 END;

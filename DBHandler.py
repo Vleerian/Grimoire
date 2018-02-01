@@ -164,7 +164,6 @@ def HandleSubmit(Book, Page, Content):
 
 
 def HandleAppend(Book, Page, Append):
-	print(Book, Page)
 	Data = GetPage(Book, Page)
 	if Data == None or len(Data) < 3:
 		return HandleSubmit(Book, Page, Append)
