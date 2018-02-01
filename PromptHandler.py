@@ -90,6 +90,9 @@ class Prompts():
 
     #CreatePrompt does what it says. It creates prompts for the user
     def CreatePrompt(self, Book):
+        if not Grimoire_Config.Enable_Prompts:
+            return None
+
         #GenPrompt is used for creating Item/Location/Character Prompts
         #It uses the categories defined and whatever page it's given
         #To see if a prompt needs to be sent.
@@ -131,24 +134,17 @@ class Prompts():
             #whatever title was seat above is irrelevant.
             Title = None
             BookData = GetBook(Book, False)
-            while len(BookData) > 0:
-                #So we need book data. But if we just go through books, it will want to
-                #tag pages that are already tagged... this is where the ignore variable
-                #we'd been working on comes in handy. We 'ignore' fleshed out pages
-                Tmp = BookData.pop()
-                if not Tmp in Ignore:
-                    Title = Tmp[0]
-                    Prompt = ("I know little about " + Title + ", care to tell me what they are?",
-                    ":!t Character|Location|Item")
-                    BookData = []
             if Title is None:
-                #Finally, if there are no pages to tag or flesh out, we'll look for links.
+                #If there are no pages to flesh out, we'll look for links.
                 #If you're in a potential book, or a book with potential pages, it'll give
                 #prompts for them.
                 Link = RandoLink(Book)
                 if not Link is None:
-                    Prompt = ("I remember you mentioning " + Link[0] + ", what might that be?",
-                    ":!t Character|Location|Item")
+                    Prompt = ("I remember you mentioning " + Link[0] + ", tell me a little about it.",
+                    """
+* * *
+Overview
+""")
                     Title = Link[0]
                 else:
                     #And if your book is empty/completely filled out, we'll give a little

@@ -1,7 +1,7 @@
 			<div class="container">
 				<form action="/newPage" method="post">
 				<center>
-					<h1 style="padding-bottom:0px; margin-bottom:0px;">$TITLE</h1>
+					<h1 style="padding-bottom:0px; margin-bottom:0px;">$PAGE</h1>
 					<em style="padding-top:0px; margin-top:0px;"><a href="/$BOOK">$BOOK</a></em>
 				</center>
 				<div class="row">
@@ -12,8 +12,9 @@
 					<div class="col"></div>
 				</div>
 			</div>
-			<input type="hidden" name="Page" value="$TITLE">
+			<input type="hidden" name="Page" value="$PAGE">
 			<input type="hidden" name="Book" value="$BOOK">
+			<input type="hidden" name="Tags" value="$TAGS">
 			<textarea hidden name="Content">$RAWCONTENT</textarea>
 			<footer class="footer">
 				<div class="container">

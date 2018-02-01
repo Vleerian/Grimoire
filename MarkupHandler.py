@@ -1,13 +1,11 @@
 import markdown
 import re
+from config import Grimoire_Config
 
-#Atabang serves no purpose but centering pages, spoiler tags, and
-#hiding tag markers.
-def ParseAtabang(Text):
+#does what it says on the box
+def ParseMarkdownExt(Text):
     Patterns = [
-        [r":![cC]([\w\W]+?)(?:\n|$|<\/)", r"<center>\1</center></"],
-        [r":![sS]([\w\W]+?)(?:\n|$|<\/)", r"<spoiler>\1</spoiler></"],
-        [r"<p>:![tT]([\w\W]+?)(?:\n|$|<\/p>)", ""]
+        (r"-(?:>|&gt;)([\w\W]+?)(:?<|&lt;)-", r"<center>\1</center>"),
     ]
     Result = Text
     for Pattern in Patterns:
@@ -16,6 +14,8 @@ def ParseAtabang(Text):
 
 #This just applies markdown and Atabang
 def Markup(Text):
-    Result = markdown.markdown(Text)
-    Result = ParseAtabang(Result)
+    Result = Text
+    if Grimoire_Config.Enable_Markdown:
+        Result = markdown.markdown(Text)
+        Result = ParseMarkdownExt(Result)
     return Result

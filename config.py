@@ -3,9 +3,25 @@ import inspect
 #The ATABOX class is our 'Constants and QOL' container
 class Grimoire_Config():
 	#Debug_Mode enables Debug_Level print statements on the console
-	Debug_Mode = True
+	Debug_Mode 			= True
 
-	Database_Name = "Database"
+	#Port controls... what port it runs on.
+	Port				= 8000
+
+	#Controls the name of the database file
+	Database_Name 		= "Database"
+
+	#Controls if Markdown is enabled or disabled. WARNING: DISABLING THIS REMOVES FIELDS
+	Enable_Markdown 	= True
+
+	#Controls if potential pages and books will appear
+	Enable_Potential 	= True
+
+	#Controls if prompts will be given
+	Enable_Prompts		= True
+
+	#Filetypes that are permitted for upload
+	Allowed_Extensions = ['png', 'jpg', 'jpeg', 'gif']
 
 	#Self explanatory. If Debug_Mode is on, it prints out exception messages when errors are encountered.
 	def HandleErrMsg(Error):

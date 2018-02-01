@@ -17,8 +17,12 @@ def GetPage(Book, Page):
 		#Now that we have the page's ID, we can grab it's content
 		Cursor.execute("SELECT Body FROM Content WHERE PageID = ? AND Valid = 1 LIMIT 1", (PageData[0], ))
 		PageContent = Cursor.fetchone()
-		#Now we append the content to the basic page data, and return it
+		#Now we append the content to the basic page data
 		PageData += PageContent
+		#Last thing we need are the tags.
+		Cursor.execute("SELECT group_concat(Tag, \", \") FROM Tags WHERE PageID = ?", (PageData[0], ))
+		Tags = Cursor.fetchone()
+		PageData += Tags
 		return PageData
 	else:
 		#no page was found
@@ -58,11 +62,13 @@ def GetPotentialBook(Book):
 
 
 #This function adds a new page
-def NewPage(Book, Page, Content):
+def NewPage(Book, Page, Content, Tags):
 	try:
 		Cursor.execute("INSERT INTO Pages (PageName, BookName) VALUES (?, ?)", (Page,Book,))
 		PageID = Cursor.lastrowid
 		Cursor.execute("INSERT INTO Content(PageID, Valid, Body) VALUES(?,?,?)",(PageID, 1, Content,))
+		for tag in Tags.split(", "):
+			Cursor.execute("INSERT INTO Tags(PageID, Tag) VALUES(?,?)",(PageID, tag,))
 		DB.commit()
 		ContentParser(PageID, Content)
 		return True
@@ -72,11 +78,15 @@ def NewPage(Book, Page, Content):
 
 
 #this function updates an existing page
-def UpdatePage(Data, Content):
+def UpdatePage(Data, Content, Tags):
 	try:
 		Cursor.execute("INSERT INTO Content(PageID, Valid, Body) VALUES(?,?,?)", (Data[0], 1, Content,))
-		ContentParser(Data[0], Content)
+		Cursor.execute("DELETE FROM Tags WHERE PageID = ?", (Data[0],))
+		Tags = Tags.split(", ")
+		for tag in Tags:
+			Cursor.execute("INSERT INTO Tags(PageID, Tag) VALUES(?,?)",(Data[0], tag.strip(),))
 		DB.commit()
+		ContentParser(Data[0], Content)
 		return True
 	except Exception as E:
 		return False
@@ -144,22 +154,23 @@ def ContentParser(PageID, Content):
 		HandleDupes(PageID, NewFields, OldFields, Table, IDColumn)
 	#It's absolutely likely that there is a more elegant way to do this
 	#But I like reducing the number of times I have to type the same thing.
-	Run(r'## ([^\n]+)([\w\W]+?)(?:\* \* \*|$)', "Fields", "FieldName", ("FieldName"," FieldContent"))
-	Run(r'\*\*([\w\W]+?)\*\*:([\w\W]+?)(?:\||\r|\n)', "Fields", "FieldName", ("FieldName"," FieldContent"))
-	Run(r':![tT]([\w\W]+?)$', "Tags", "Tag", ("Tag",))
-	SearchForLinks(Content)
+	if Grimoire_Config.Enable_Markdown:
+		Run(r'## ([^\n]+)([\w\W]+?)(?:\* \* \*|$)', "Fields", "FieldName", ("FieldName"," FieldContent"))
+		Run(r'\*\*([\w\W]+?)\*\*:([\w\W]+?)(?:\||\r|\n)', "Fields", "FieldName", ("FieldName"," FieldContent"))
+	if Grimoire_Config.Enable_Potential:
+		SearchForLinks(Content)
 
 
 #This function handles inserts, deciding if a page should be updated or created
-def HandleSubmit(Book, Page, Content):
+def HandleSubmit(Book, Page, Content, Tags):
 	Data = GetPage(Book, Page)
 	RValue = None
 	if Data == None:
 		#If there's no page data, create a new page
-		RValue = NewPage(Book, Page, Content)
+		RValue = NewPage(Book, Page, Content, Tags)
 	else:
 		#If there is page data, update a page
-		RValue = UpdatePage(Data, Content)
+		RValue = UpdatePage(Data, Content, Tags)
 	return RValue
 
 

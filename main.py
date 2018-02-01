@@ -51,9 +51,14 @@ async def index(request):
 async def book(request):
 	resp = loadTemplate("newpage")
 	if "Edit" in request.form:
-		resp = resp.replace("$BOOK", request.form['Book'][0]).replace("$PAGE", request.form['Page'][0]).replace("$CONTENT", request.form['Content'][0])
+		resp = resp.replace("$BOOK", request.form['Book'][0]).replace("$PAGE", request.form['Page'][0])
+		resp = resp.replace("$CONTENT", request.form['Content'][0])
+		try:
+			resp = resp.replace("$TAGS", request.form['Tags'][0])
+		except Exception:
+			resp = resp.replace("$TAGS", "Add a tag, Zodivikh")
 	else:
-		resp = resp.replace("$BOOK", "").replace("$PAGE", "").replace("$CONTENT", "")
+		resp = resp.replace("$BOOK", "").replace("$PAGE", "").replace("$CONTENT", "").replace("$TAGS", "")
 	return response.html(resp, status=200)
 
 
@@ -62,7 +67,8 @@ async def book(request):
 @app.route("/submit", methods=['POST'])
 async def submit(request):
 	if "NEW" in request.form:
-		resp = HandleSubmit(request.form['Book'][0], request.form['Page'][0], request.form['Content'][0])
+		resp = HandleSubmit(request.form['Book'][0], request.form['Page'][0],
+						request.form['Content'][0], request.form['Tags'][0])
 		if resp == True:
 			return redirect("/"+request.form['Book'][0]+"/"+request.form['Page'][0])
 		else:
@@ -87,6 +93,9 @@ async def book(request, book, api="false"):
 	Pages = ""
 	for Page in Data:
 		Pages += '<a href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
+	Data = GetPotentialBook(book)
+	for Page in Data:
+		Pages += '<a class="glow" href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
 	Template = loadTemplate("list")
 	resp = Template.replace("$TITLE", book).replace("$ITEMS", Pages)
 
@@ -111,9 +120,8 @@ async def potentialbook(request, book, api="false"):
 		Pages += '<a class="glow" href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
 	Template = loadTemplate("list")
 	resp = Template.replace("$TITLE", '<span class="glow">'+book+'</span>').replace("$ITEMS", Pages)
-
 	Prompt = Prompts().CreatePrompt(book)
-	if not Prompt == None:
+	if Prompt is not None:
 		resp = resp.replace("$PROMPT", Prompt)
 	else:
 		resp = resp.replace("$PROMPT", "")
@@ -153,10 +161,14 @@ async def page(request, book, page):
 		return response.html(resp, status=404)
 	Template = loadTemplate("page")
 
-	resp = Template.replace("$TITLE", Data[1]).replace("$BOOK",
+	resp = Template.replace("$PAGE", Data[1]).replace("$BOOK",
 	Data[2]).replace("$CONTENT", Markup(Data[3])).replace("$RAWCONTENT", Data[3])
+	try:
+		resp = resp.replace("$TAGS", Data[4])
+	except Exception:
+		resp = resp.replace("$TAGS", "").replace("hidden>$MESSAGE", ">This page is missing a tag, Zodivikh.")
 	return response.html(resp, status=200)
 
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", port=8000)
+	app.run(host="0.0.0.0", port=Grimoire_Config.Port)

@@ -1,18 +1,18 @@
 CREATE TABLE Pages (
     PageID INTEGER PRIMARY KEY AUTOINCREMENT,
-    PageName TEXT,
-    BookName TEXT
+    PageName TEXT NOT NULL,
+    BookName TEXT NOT NULL
 );
 
 CREATE TABLE Content (
-    PageID INTEGER,
-    Valid INTEGER,
-    Body TEXT,
+    PageID INTEGER NOT NULL,
+    Valid INTEGER NOT NULL,
+    Body TEXT NOT NULL,
     FOREIGN KEY(PageID) REFERENCES Pages(PageID)
 );
 
 CREATE TABLE `Changes` (
-    `Timestamp` TEXT,
+    `Timestamp` TEXT NOT NULL,
     `PageID` INTEGER,
     `OriginalID` INTEGER,
     `NewID` INTEGER,
@@ -24,7 +24,7 @@ CREATE TABLE `Changes` (
 );
 
 CREATE TABLE `Fields` (
-	`PageID`	INTEGER,
+	`PageID`	INTEGER NOT NULL,
 	`FieldName`	TEXT NOT NULL,
 	`FieldContent`	TEXT NOT NULL,
     FOREIGN KEY(`PageID`) REFERENCES `Pages`(`PageID`)
@@ -32,15 +32,15 @@ CREATE TABLE `Fields` (
 );
 
 CREATE TABLE `Tags` (
-	`PageID`	INTEGER,
-	`Tag`	TEXT,
+	`PageID`	INTEGER NOT NULL,
+	`Tag`	TEXT NOT NULL,
     FOREIGN KEY(`PageID`) REFERENCES `Pages`(`PageID`)
     UNIQUE (PageID, Tag)
 );
 
 CREATE TABLE `Linked` (
-	`Name`	TEXT,
-	`Book`	TEXT,
+	`Name`	TEXT NOT NULL,
+	`Book`	TEXT NOT NULL,
     UNIQUE (Name, Book)
 );
 
@@ -52,10 +52,10 @@ DELETE FROM Linked WHERE NEW.PageName = Name AND NEW.BookName = Book;
 END;
 
 CREATE TRIGGER PreventLinkingExitant
-AFTER INSERT ON Linked
-WHEN EXISTS (SELECT * FROM Pages WHERE NEW.Page = PageName AND NEW.Book = BookName)
+BEFORE INSERT ON Linked
+WHEN EXISTS (SELECT * FROM Pages WHERE NEW.Name = Name AND NEW.Book = Name)
 BEGIN
-DELETE FROM Linked WHERE PageName = NEW.Name AND BookName = NEW.Book;
+DELETE FROM Linked WHERE Name = NEW.Name AND Name = NEW.Book;
 END;
 
 CREATE TRIGGER new_page
