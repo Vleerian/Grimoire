@@ -20,9 +20,6 @@ class Grimoire_Config():
 	#Controls if prompts will be given
 	Enable_Prompts		= True
 
-	#Filetypes that are permitted for upload
-	Allowed_Extensions = ['png', 'jpg', 'jpeg', 'gif']
-
 	#Self explanatory. If Debug_Mode is on, it prints out exception messages when errors are encountered.
 	def HandleErrMsg(Error):
 		if Grimoire_Config.Debug_Mode:
