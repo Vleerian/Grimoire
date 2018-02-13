@@ -6,36 +6,34 @@ from main import loadTemplate
 class Prompts():
     #Page_Types is used to determine (through a user-set tag) what a page is about
     Page_Types = [
-    "Character",
-    "Location",
-    "Item"
+        "Character",
+        "Location",
+        "Item",
+        "Event"
     ]
     #Common fields include general sections you'd expect on a page
-    Common_Fields = {
-    "Overview": ("Tell me a little about $?.", """
+    Character_Fields = {
+        "Overview": ("Tell me a little about $?.", """
 * * *
 ## Overview
 """),
-    "Appearance": ("What does $? look like?", """
+        "Appearance": ("What does $? look like?", """
 * * *
 ## Appearance
 """),
-    "Personality": ("Tell me about how $? acts.", """
+        "Personality": ("Tell me about how $? acts.", """
 * * *
 ## Personality
 """),
-    "Powers": ("What sort of powers or abilities does $? have?", """
+        "Powers": ("What sort of powers or abilities does $? have?", """
 * * *
 ## Powers
-""")
-    }
-    #Common features are things you'd expect on a page
-    Common_Features = {
-    "Age": ("How old is $??", "**Age**: ? |"),
-    "Occupation": ("What does $? do for a living?", "**Occupation*: ? |"),
-    "Sex": ("What sex is $??", "**Sex**: ? |"),
-    "Height": ("How tall is $??", "**Height**: ? |"),
-    "Weight": ("How much does $? weigh?", "**Weight**: ? |")
+"""),
+        "Occupation": ("What does $? do for a living?", "**Occupation*: ? |"),
+        "Sex": ("What sex is $??", "**Sex**: ? |"),
+        "Height": ("How tall is $??", "**Height**: ? |"),
+        "Weight": ("How much does $? weigh?", "**Weight**: ? |"),
+        "Birthdate": ("When was $? born?", "**Birthdate**: ? |")
     }
     #Common fields for locations
     Location_Fields = {
@@ -43,37 +41,42 @@ class Prompts():
 * * *
 ## Overview
 """),
-    "People": ("Tell me of the people around $?.", """
+        "People": ("Tell me of the people around $?.", """
 * * *
 ## People
 """),
-    "Culture": ("Tell me of $?'s culture.'", """
+        "Culture": ("Tell me of $?'s culture.'", """
 * * *
 ## Culture
 """),
-    "Location": ("Where is $?, how can I find it?.'", """
-* * *
-## Location
-"""),
-    "Atmosphere": ("What is it like to spend time in $??.'", """
+        "Atmosphere": ("What is it like to spend time in $??.'", """
 * * *
 ## Atmosphere
-""")
+"""),
+        "Location": ("Where is $?, how can I find it?.", "**Location**: ? |")
     }
     #Common fields for items
     Item_Fields = {
-    "Overview": ("Tell me, what sort of device is $??", """
+        "Overview": ("Tell me, what sort of device is $??", """
 * * *
 ## Overview
 """),
-    "Appearance": ("What does this '$?' look like.", """
+        "Appearance": ("What does this '$?' look like.", """
 * * *
 ## Appearance
 """),
-    "Function": ("This $?, what purpose does it serve?.'", """
+        "Function": ("This $?, what purpose does it serve?.", """
 * * *
 ## Function
 """)
+    }
+    #Common fields for events
+    Event_Fields = {
+    "Overview": ("Tell me a little about $?.", """
+* * *
+## Overview
+"""),
+        "Date": ("When did $? take place?", "**Date**: ? |")
     }
     #Suggestions that show up if no prompts can be had.
     Suggestions = [
@@ -98,7 +101,7 @@ class Prompts():
         #To see if a prompt needs to be sent.
         def GenPrompt(Item, Collection):
             for SubCategory in Collection.keys():
-                if not SubCategory in Item[2].replace("\r", ""):
+                if not SubCategory.lower() in Item[2].lower().replace("\r", ""):
                     return (
                     Collection[SubCategory][0].replace("$?", Item[0]),
                     Collection[SubCategory][1]
@@ -115,17 +118,23 @@ class Prompts():
         for Point in Data:
             Tag = Point[-1].strip()
             if "Character" in Tag:
-                tmp = [self.Common_Fields, self.Common_Features]
-                shuffle(tmp)
-                for Category in tmp:
-                    Prompt = GenPrompt(Point, Category)
+                Prompt = GenPrompt(Point, self.Character_Fields)
+                if Prompt is not None:
                     Title = Point[0]
             elif "Item" in Tag:
                 Prompt = GenPrompt(Point, self.Item_Fields)
-                Title = Point[0]
+                if Prompt is not None:
+                    Title = Point[0]
             elif "Location" in Tag:
                 Prompt = GenPrompt(Point, self.Location_Fields)
-                Title = Point[0]
+                if Prompt is not None:
+                    Title = Point[0]
+            elif "Event" in Tag:
+                Prompt = GenPrompt(Point, self.Location_Fields)
+                if Prompt is not None:
+                    Title = Point[0]
+            if Prompt is not None:
+                break
             Ignore.append((Point[0],))
 
         #Failing that, let's start tagging pages
@@ -161,6 +170,6 @@ Overview
         Finished = loadTemplate("PromptArea")
         Finished = Finished.replace("$PROMPT", Prompt[0])
         Finished = Finished.replace("$APPEND", Prompt[1])
-        Finished = Finished.replace("$TITLE", Title)
+        Finished = Finished.replace("$PAGE", Title)
         Finished = Finished.replace("$BOOK", Book)
         return Finished

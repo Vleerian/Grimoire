@@ -24,6 +24,7 @@ CREATE TABLE `Changes` (
 );
 
 CREATE TABLE `Fields` (
+    `ID` INTEGER PRIMARY KEY AUTOINCREMENT,
 	`PageID`	INTEGER NOT NULL,
 	`FieldName`	TEXT NOT NULL,
 	`FieldContent`	TEXT NOT NULL,
@@ -44,6 +45,16 @@ CREATE TABLE `Linked` (
     UNIQUE (Name, Book)
 );
 
+CREATE TABLE `Dates` (
+	`PageID`	INTEGER NOT NULL,
+	`Year`	INTEGER NOT NULL,
+	`EraName`	INTEGER NOT NULL,
+	`EraOrder`	INTEGER NOT NULL,
+	`Reversed`	INTEGER NOT NULL,
+    FOREIGN KEY(`PageID`) REFERENCES `Pages`(`PageID`),
+    UNIQUE (PageID)
+);
+
 CREATE TRIGGER RemoveLinked
 AFTER INSERT ON Pages
 WHEN EXISTS (SELECT * FROM Linked WHERE NEW.PageName = Name AND NEW.BookName = Book)
@@ -52,10 +63,9 @@ DELETE FROM Linked WHERE NEW.PageName = Name AND NEW.BookName = Book;
 END;
 
 CREATE TRIGGER PreventLinkingExitant
-BEFORE INSERT ON Linked
-WHEN EXISTS (SELECT * FROM Pages WHERE NEW.Name = Name AND NEW.Book = Name)
+AFTER INSERT ON Linked
 BEGIN
-DELETE FROM Linked WHERE Name = NEW.Name AND Name = NEW.Book;
+DELETE FROM Linked WHERE Name IN (SELECT PageName FROM Pages);
 END;
 
 CREATE TRIGGER new_page

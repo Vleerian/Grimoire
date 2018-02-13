@@ -29,6 +29,20 @@ def GetPage(Book, Page):
 		return None
 
 
+#This fetches a page's overview
+def GetOverview(PageID):
+	Cursor.execute("SELECT FieldContent FROM Fields WHERE PageID = ? AND FieldName LIKE '%Overview%' LIMIT 1", (PageID, ))
+	Overview = Cursor.fetchone()
+	return Overview[0]
+
+
+#This fetches a page's type
+def GetType(PageID):
+	Cursor.execute("SELECT GROUP_CONCAT(Tag, \",\") FROM Tags WHERE PageID = ? AND Tag IN(\"Character\", \"Tag\", \"Location\", \"Race\") LIMIT 1", (PageID, ))
+	Overview = Cursor.fetchone()
+	return Overview[0]
+
+
 #This function gets the Book/Page pairing based on an ID
 def FromID(id : int):
 	Cursor.execute("SELECT PageName, BookName FROM Pages WHERE PageID = ?", (id, ))
@@ -51,11 +65,13 @@ def GetBooks():
 	return Cursor.fetchall()
 
 
+#This fetches all potential books
 def GetPotentialBooks():
 	Cursor.execute("SELECT Book FROM Linked WHERE Book NOT IN (SELECT BookName FROM Pages) GROUP BY BOOK")
 	return Cursor.fetchall()
 
 
+#This fetches all the the pages in a 'potential book'
 def GetPotentialBook(Book):
 	Cursor.execute("SELECT Book, Name FROM Linked WHERE Book = ?", (Book, ))
 	return Cursor.fetchall()
@@ -81,14 +97,16 @@ def NewPage(Book, Page, Content, Tags):
 def UpdatePage(Data, Content, Tags):
 	try:
 		Cursor.execute("INSERT INTO Content(PageID, Valid, Body) VALUES(?,?,?)", (Data[0], 1, Content,))
-		Cursor.execute("DELETE FROM Tags WHERE PageID = ?", (Data[0],))
-		Tags = Tags.split(", ")
-		for tag in Tags:
-			Cursor.execute("INSERT INTO Tags(PageID, Tag) VALUES(?,?)",(Data[0], tag.strip(),))
+		if Tags is not None:
+			Cursor.execute("DELETE FROM Tags WHERE PageID = ?", (Data[0],))
+			Tags = Tags.split(", ")
+			for tag in Tags:
+				Cursor.execute("INSERT INTO Tags(PageID, Tag) VALUES(?,?)",(Data[0], tag.strip(),))
 		DB.commit()
 		ContentParser(Data[0], Content)
 		return True
 	except Exception as E:
+		Grimoire_Config.HandleErrMsg(E)
 		return False
 
 
@@ -101,6 +119,23 @@ def HandleDupes(PageID, NewCol, OldCol, Table, Column):
 		else:
 			Cursor.execute("DELETE FROM "+Table+" WHERE PageID = ? AND "+Column+" = ?", (PageID, Item[0].strip()))
 
+
+#Handles 'Date' fields, and links to the owner page
+def HandleDate(PageID, Date):
+	#We break down a date (1996AD1-1) into usable bits
+	Matches = re.findall(r"(\d+)([A-z]+)(\d+)(-1)?", Date)[0]
+	#1996AD1(-1)? indicates if we want the year order to be reversed
+	Reversed = 0
+	if Matches[3] is not None and Matches[3] is not '':
+		Reversed = 1
+	SQL = "INSERT INTO Dates(PageID, Year, EraName, EraOrder, Reversed) VALUES(?,?,?,?,?)"
+	try:
+		Cursor.execute(SQL, (PageID, Matches[0], Matches[1], Matches[2], Reversed))
+		DB.commit()
+	except sqlite3.IntegrityError as E:
+		return
+	except Exception as E:
+		Grimoire_Config.HandleErrMsg(E)
 
 #this function handles all inserts into Fields and Tags.
 def HandleInserts(Matches, PageID, SQL):
@@ -131,7 +166,7 @@ def SearchForLinks(Text):
 	for Match in Matches:
 		if re.match("[\w\W]+?\/[\w\W]+", Match[1:]):
 			try:
-				Cursor.execute("INSERT INTO Linked(Book, Name) VALUES(?,?)", Match[1:].split("/"))
+				Cursor.execute("INSERT INTO Linked(Book, Name) VALUES(?,?)", Match[1:].split("/")[1:])
 			except sqlite3.IntegrityError:
 				pass
 			except Exception as E:
@@ -148,6 +183,9 @@ def ContentParser(PageID, Content):
 		#Let's make our SQL statement. We use a tuple for columns so that we can create the right number of ? tokens
 		SQL = "INSERT INTO "+Table+"(PageID,"+",".join(Columns)+") VALUES (?,"+("?,"*len(Columns))[:-1]+")"
 		NewFields = HandleInserts(Matches, PageID, SQL)
+		for Match in Matches:
+			if Match[0] == "Date" or Match[0] == "Birthdate":
+				HandleDate(PageID, Match[1])
 		#Now we need the old fields for the HandleDupes
 		Cursor.execute("SELECT "+IDColumn+" FROM "+Table+" WHERE PageID = ?", (PageID,))
 		OldFields = Cursor.fetchall()
@@ -161,27 +199,62 @@ def ContentParser(PageID, Content):
 		SearchForLinks(Content)
 
 
+#This function gets the timeline of all events in a book
+def GetTimeline(Book):
+	#This fetches a list of all Eras, their orders, and if they should be reversed
+	Cursor.execute("SELECT EraName, EraOrder, Reversed FROM Dates WHERE PageID IN( SELECT PageID FROM Pages WHERE BookName = ?) GROUP BY EraOrder;", (Book,))
+	Pages = Cursor.fetchall()
+	Data = []
+	for Era in Pages:
+		#We create the SQL, and append DESC if it has to be reversed
+		SQL = "SELECT * FROM Dates WHERE PageID IN( SELECT PageID FROM Pages WHERE BookName = ?) AND EraName = ? ORDER BY YEAR"
+		if Era[2] == 1:
+			SQL += " DESC"
+		Cursor.execute(SQL, (Book, Era[0]))
+		for Date in Cursor.fetchall():
+			#We create the tuple with all the data needed in the timeline
+			TmpDate = str(Date[1]) + Date[2]
+			TmpName = FromID(Date[0]).split("/")[1]
+			TmpOverview = None
+			Type = GetType(Date[0])
+			if "character" in Type.lower():
+				TmpOverview = TmpName + " was born."
+			elif "location" in Type.lower():
+				TmpOverview = TmpName + " was founded."
+			elif "event" in Type.lower():
+				TmpOverview = GetOverview(Date[0])
+			if TmpOverview is not None:
+				Data.append((TmpDate, TmpName, TmpOverview))
+	#We return the now-populated data array
+	return Data
+
 #This function handles inserts, deciding if a page should be updated or created
 def HandleSubmit(Book, Page, Content, Tags):
-	Data = GetPage(Book, Page)
-	RValue = None
-	if Data == None:
-		#If there's no page data, create a new page
-		RValue = NewPage(Book, Page, Content, Tags)
-	else:
-		#If there is page data, update a page
-		RValue = UpdatePage(Data, Content, Tags)
-	return RValue
+	try:
+		Data = GetPage(Book, Page)
+		RValue = None
+		if Data == None:
+			#If there's no page data, create a new page
+			RValue = NewPage(Book, Page, Content, Tags)
+		else:
+			#If there is page data, update a page
+			RValue = UpdatePage(Data, Content, Tags)
+		return RValue
+	except Exception as E:
+		Grimoire_Config.HandleErrMsg(E)
 
 
 def HandleAppend(Book, Page, Append):
-	Data = GetPage(Book, Page)
-	if Data == None or len(Data) < 3:
-		return HandleSubmit(Book, Page, Append)
-	Content = Data[3] + """
-""" + Append
-	RValue = UpdatePage(Data, Content)
-	return RValue
+	try:
+		Data = GetPage(Book, Page)
+		if Data == None or len(Data) < 3:
+			return HandleSubmit(Book, Page, Append, None)
+		Content = Data[3] + """
+	""" + Append
+		RValue = UpdatePage(Data, Content, None)
+		return RValue
+	except Exception as E:
+		Grimoire_Config.HandleErrMsg(E)
 
 #This function grabs the latest changes logged in the or
 def GetChanges():

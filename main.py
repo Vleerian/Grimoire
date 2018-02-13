@@ -35,11 +35,11 @@ async def index(request):
 		Changes += Change[0] + ": "
 		Destination = FromID(Change[1])
 		if isinstance(Change[2], int):
-			Changes += '<a href="/' + Destination + '">' + Destination.split("/")[1] + "</a> was edited."
+			Changes += '<a href="/read/' + Destination + '">' + Destination.split("/")[1] + "</a> was edited."
 		elif "now exists" in Change[4]:
-			Changes += '<a href="/' + Destination + '">' + Destination.split("/")[1] + "</a> was created."
+			Changes += '<a href="/read/' + Destination + '">' + Destination.split("/")[1] + "</a> was created."
 		else:
-			Changes += Change[5].split(" now ")[0]+"'s page " + Change[4].split(" now ")[0] + ' was moved <a href="'
+			Changes += Change[5].split(" now ")[0]+"'s page " + Change[4].split(" now ")[0] + ' was moved <a href="/read'
 			Changes += Change[5].split(" now ")[-1] + "/" + Change[4].split(" now ")[-1] +'">here</a>.'
 		Changes += "<br>"
 	resp = resp.replace("$CHANGES", Changes)
@@ -70,13 +70,13 @@ async def submit(request):
 		resp = HandleSubmit(request.form['Book'][0], request.form['Page'][0],
 						request.form['Content'][0], request.form['Tags'][0])
 		if resp == True:
-			return redirect("/"+request.form['Book'][0]+"/"+request.form['Page'][0])
+			return redirect("/read/"+request.form['Book'][0]+"/"+request.form['Page'][0])
 		else:
 			return response.html(loadTemplate("SubmitError"), status=404)
 	elif "APPEND" in request.form:
 		resp = HandleAppend(request.form['Book'][0], request.form['Page'][0], request.form['Append'][0])
 		if resp == True:
-			return redirect("/"+request.form['Book'][0]+"/"+request.form['Page'][0])
+			return redirect("/read/"+request.form['Book'][0]+"/"+request.form['Page'][0])
 		else:
 			return response.html(loadTemplate("SubmitError"), status=404)
 	else:
@@ -84,7 +84,7 @@ async def submit(request):
 
 
 #Book, this is the menu that lets you see all the pabes in a book.
-@app.route("/<book>")
+@app.route("/read/<book>")
 async def book(request, book, api="false"):
 	book = urllib.parse.unquote(book)
 	Data = GetBook(book)
@@ -92,10 +92,10 @@ async def book(request, book, api="false"):
 		return response.html(loadTemplate("NoPage"), status=404)
 	Pages = ""
 	for Page in Data:
-		Pages += '<a href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
+		Pages += '<a href="/read/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
 	Data = GetPotentialBook(book)
 	for Page in Data:
-		Pages += '<a class="glow" href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
+		Pages += '<a class="glow" href="/read/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
 	Template = loadTemplate("list")
 	resp = Template.replace("$TITLE", book).replace("$ITEMS", Pages)
 
@@ -117,7 +117,7 @@ async def potentialbook(request, book, api="false"):
 		return response.html(loadTemplate("NoPage"), status=404)
 	Pages = ""
 	for Page in Data:
-		Pages += '<a class="glow" href="/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
+		Pages += '<a class="glow" href="/read/'+book+"/"+Page[1]+'">'+Page[1]+"</a><br>"
 	Template = loadTemplate("list")
 	resp = Template.replace("$TITLE", '<span class="glow">'+book+'</span>').replace("$ITEMS", Pages)
 	Prompt = Prompts().CreatePrompt(book)
@@ -137,7 +137,7 @@ async def books(request):
 		return response.text("There's a serious problem, Zodivikh. Be sure you look at that 'console' of yours and fix it.", status=404)
 	Books = ""
 	for Book in Data:
-		Books += '<a href="/'+Book[0]+'">'+Book[0]+"</a><br>"
+		Books += '<a href="/read/'+Book[0]+'">'+Book[0]+"</a><br>"
 	Data = GetPotentialBooks()
 	if Data == None:
 		pass
@@ -151,7 +151,7 @@ async def books(request):
 
 
 #A page
-@app.route("/<book>/<page>")
+@app.route("/read/<book>/<page>")
 async def page(request, book, page):
 	book = urllib.parse.unquote(book)
 	page = urllib.parse.unquote(page)
@@ -167,6 +167,28 @@ async def page(request, book, page):
 		resp = resp.replace("$TAGS", Data[4])
 	except Exception:
 		resp = resp.replace("$TAGS", "").replace("hidden>$MESSAGE", ">This page is missing a tag, Zodivikh.")
+	return response.html(resp, status=200)
+
+
+@app.route("/timeline/<book>")
+async def timeline(request, book):
+	Timeline = GetTimeline(book)
+	if Timeline is None or len(Timeline) == 0:
+		resp = loadTemplate("None").replace("$CONTENT", "Your timeline is empty, Zodivikh.")
+		return response.html(resp, status=200)
+	Elements = ""
+	ElementTemplate = open("Templates/timelineElement.html", "r").read()
+	ElementTemplateInverse = open("Templates/timelineElementInverse.html", "r").read()
+	Inverse = 0
+	for Date in Timeline:
+		if Inverse == 0:
+			Elements += ElementTemplate.replace("$ITEMNAME", Date[0] + " " + Date[1]).replace("$ITEMBODY", Date[2])
+			Inverse = 1
+		else:
+			Elements += ElementTemplateInverse.replace("$ITEMNAME", Date[0] + " " + Date[1]).replace("$ITEMBODY", Date[2])
+			Inverse = 0
+	resp = loadTemplate("timeline")
+	resp = resp.replace("$TIMELINEBODY", Elements).replace("$BOOK", book)
 	return response.html(resp, status=200)
 
 

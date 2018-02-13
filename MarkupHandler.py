@@ -6,6 +6,7 @@ from config import Grimoire_Config
 def ParseMarkdownExt(Text):
     Patterns = [
         (r"-(?:>|&gt;)([\w\W]+?)(:?<|&lt;)-", r"<center>\1</center>"),
+        (r"(\d+[A-z]+)\d+(?:-1)?", r"\1")
     ]
     Result = Text
     for Pattern in Patterns:
