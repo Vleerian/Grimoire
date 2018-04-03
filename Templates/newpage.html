@@ -1,14 +1,28 @@
 
-        <div class="container">
-            <center>
-                <br>
-                <form action="/submit" method="post">
-                    <input required class="NewInput" type="text" name="Book" placeholder="Book Name" value="$BOOK">
-                    <input required class="NewInput" type="text" name="Page" placeholder="Page Name" value="$PAGE">
-                    <input required class="TagInput" type="text" name="Tags" placeholder="Page Tags" value="$TAGS">
-                    <textarea class="NewField" rows=25 name="Content" placeholder="Page Content">$CONTENT</textarea>
-                    <input class="NewButton" type="submit" name="NEW" value="Submit">
-                </form>
-            </center>
-        </div>
-    </body>
+		<div class="container">
+				<br>
+				<form action="/submit" method="post">
+					<center>
+						<input required class="NewInput" type="text" name="Book" placeholder="Book Name" value="$BOOK">
+						<input required class="NewInput" type="text" name="Page" placeholder="Page Name" value="$PAGE">
+						<input required class="TagInput" type="text" name="Tags" placeholder="Page Tags" value="$TAGS">
+					</center>
+					<div class="trumbowyg-dark">
+						<div class="my-editor"></div>
+					</div>
+					<textarea hidden id="body" name="Content" ></textarea>
+					<center>
+						<input class="NewButton" type="submit" name="NEW" value="Submit">
+					</center>
+				</form>
+
+		</div>
+	</body>
+
+	<script>
+	$(document).ready(function(){
+		$('.my-editor')
+		.trumbowyg()
+		.on('tbwchange', function(){ $("#body").val($('.my-editor').trumbowyg('html')) })
+	});
+	</script>

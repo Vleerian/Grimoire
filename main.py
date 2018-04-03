@@ -5,7 +5,6 @@ from sanic import response
 from sanic.response import text, redirect
 from signal import signal, SIGINT
 from DBHandler import *
-from MarkupHandler import *
 from PromptHandler import *
 
 #Create the app and define static content
@@ -162,7 +161,7 @@ async def page(request, book, page):
 	Template = loadTemplate("page")
 
 	resp = Template.replace("$PAGE", Data[1]).replace("$BOOK",
-	Data[2]).replace("$CONTENT", Markup(Data[3])).replace("$RAWCONTENT", Data[3])
+	Data[2]).replace("$CONTENT", Data[3])
 	try:
 		resp = resp.replace("$TAGS", Data[4])
 	except Exception:

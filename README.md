@@ -11,14 +11,11 @@ Well my friends, many hours later, and you have a disasterous project of love, a
 
 ## How do I make this work?
 You basically need to get [Sanic](https://github.com/channelcat/sanic) working. If you're on windows, you'll have to
-disable UVLoop and UJson to develop. It works perfectly on Linux, can confirm. You'll also need [Markdown](https://python-markdown.github.io/)
-because I wasn't in the mood to write the regex to get that all working properly. Why re-invent the wheel and all.
-
-~~I may replace markdown in the future with some custom spaghetti code so I can drop a license.~~
+disable UVLoop and UJson to develop. It works perfectly on Linux just by using pip, can confirm.
 
 ## I have my dependencies, what now?
-The database has to be initialized. I included the ddl to do so in CreateTables.sql. Once that's done, you start up
-main.py and you're off to the races!
+The database is already configured, but if you want to be sure, I included the DDL in CreateTables.sql.
+Otherwise, open config.py and make sure everything is to your liking.
 
 ## How do I add pages?
 On the topbar there is "New," you can add pages using that
@@ -31,16 +28,19 @@ not-worldbuilding related, because you can keep math separate from english.
 compartmentalization!
 
 ## How do I make things look nice?
-[Markdown!](https://daringfireball.net/projects/markdown/syntax#link)
+Grimoire uses a WYSIWYG editor named [Trumboyg](https://github.com/Alex-D/Trumbowyg). If you can make something
+look pretty with word, you should be able to make something look pretty in Grimoire.
 
 ## What are these glowing links that show up?
 When you link to a non-existent internal page the grimoire considers it a 'potential' page.
 It's basically saying "Heyo! You should give this place some love and attention."
 
-## What license are you putting this under?
-I'm going with the Copyright(c) Atagait Denral 2018 license. I wouldn't enforce any license I chose, and I have no
-idea how any one I chose would interact with Markdown's or Sanic's, so I'm just steering clear of that for now.
-If any of you legal types can advise, that'd be appreciated :D
-
 ## What does 'Zodivikh' mean?
 It means mortal, and is generally used as a passive-aggressive way of saying you're better than someone else.
+
+#What's this spaghetti nonsense with template loading?
+I couldnt' get jinja2 to work. If you want to make a prettier template-loader, go for it!
+
+## What is your policy on contribution?
+I honestly have no idea how a pull request works, so if someone teaches that to me, I'll write something more
+sensible. For now, if you make a change you want included, lemme know and I'll work on figuring out how that works.

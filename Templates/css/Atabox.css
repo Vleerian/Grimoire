@@ -125,3 +125,11 @@ body > .container {
 .glow {
     text-shadow: #FC0 1px 0 10px;
 }
+
+.col-md-auto {
+   max-width: 1200px !important;
+}
+
+.row {
+    display: -webkit-box;
+}
