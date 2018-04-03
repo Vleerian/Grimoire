@@ -8,9 +8,9 @@
 						<input required class="TagInput" type="text" name="Tags" placeholder="Page Tags" value="$TAGS">
 					</center>
 					<div class="trumbowyg-dark">
-						<div class="my-editor"></div>
+						<div class="my-editor">$CONTENT</div>
 					</div>
-					<textarea hidden id="body" name="Content" ></textarea>
+					<textarea hidden id="body" name="Content" >$CONTENT</textarea>
 					<center>
 						<input class="NewButton" type="submit" name="NEW" value="Submit">
 					</center>
@@ -25,4 +25,6 @@
 		.trumbowyg()
 		.on('tbwchange', function(){ $("#body").val($('.my-editor').trumbowyg('html')) })
 	});
+
+	setInterval(function(){$("#body").val($('.my-editor').trumbowyg('html'))},250);
 	</script>
